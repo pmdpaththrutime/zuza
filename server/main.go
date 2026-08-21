@@ -4,31 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
 )
-
-func getRoot(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("got / request\n")
-	io.WriteString(w, "This is my website!\n")
-}
-
-func getHello(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("got /hello request\n")
-	io.WriteString(w, "Hello, HTTP!\n")
-}
-
-func getRecordingRoom(w http.ResponseWriter, r *http.Request) {
-	room_id := r.PathValue("room")
-	if room_id != "" {
-		fmt.Fprintf(w, "You are in recording room %s\n", room_id)
-	} else {
-		// Unreachable
-		http.Error(w, "A room ID is required", http.StatusBadRequest)
-	}
-}
 
 // Health check - used by Docker Compose
 func healthCheck(w http.ResponseWriter, r *http.Request) {
@@ -50,10 +29,17 @@ func healthCheck(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", getRoot)
-	mux.HandleFunc("/hello", getHello)
 	mux.HandleFunc("/health", healthCheck)
-	mux.HandleFunc("/record/{room}", getRecordingRoom)
+
+	mux.HandleFunc("GET /auth/discord", getDiscordAuth)
+	mux.HandleFunc("GET /auth/discord/callback", getDiscordAuthCallback)
+
+	mux.HandleFunc("GET /api/me", getCurrentUser)
+	mux.HandleFunc("PATCH /api/me/settings", updateCurrentUserSettings)
+
+	mux.HandleFunc("POST /api/rooms/{room_code}/join", joinRecordingRoom)
+	mux.HandleFunc("GET /api/rooms/{room_code}", getRecordingRoomInfo)
+	mux.HandleFunc("POST /api/rooms", createNewRecordingRoom)
 
 	err := http.ListenAndServe(":3333", mux)
 
