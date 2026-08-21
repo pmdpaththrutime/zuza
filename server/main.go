@@ -1,9 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 )
@@ -28,10 +30,29 @@ func getRecordingRoom(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Health check - used by Docker Compose
+func healthCheck(w http.ResponseWriter, r *http.Request) {
+	resp := struct {
+		Status string `json:"status"`
+	}{
+		Status: "healthy",
+	}
+
+	respBytes, err := json.Marshal(resp)
+	if err != nil {
+		log.Fatalf("Failed to marshal response: %v", err)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(respBytes)
+}
+
 func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", getRoot)
 	mux.HandleFunc("/hello", getHello)
+	mux.HandleFunc("/health", healthCheck)
 	mux.HandleFunc("/record/{room}", getRecordingRoom)
 
 	err := http.ListenAndServe(":3333", mux)
