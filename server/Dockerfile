@@ -1,0 +1,14 @@
+FROM golang:1.27.0 AS builder
+WORKDIR /app
+
+COPY go.mod ./
+RUN go mod download
+COPY . .
+
+RUN CGO_ENABLED=0 go build -o /server
+
+FROM alpine:3.23.5
+COPY --from=builder /server /server
+
+EXPOSE 3333
+ENTRYPOINT ["/server"]
