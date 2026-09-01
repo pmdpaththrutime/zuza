@@ -7,6 +7,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 // Health check - used by Docker Compose
@@ -27,7 +30,16 @@ func healthCheck(w http.ResponseWriter, r *http.Request) {
 	w.Write(respBytes)
 }
 
+var DB *gorm.DB
+
 func main() {
+	var err error
+	DB, err = gorm.Open(sqlite.Open("zuza.db"), &gorm.Config{})
+	if err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+	DB.AutoMigrate(&User{}, &RecordingRoom{}, &Recording{}, &Track{}, &AudioFile{})
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", healthCheck)
 
@@ -41,7 +53,7 @@ func main() {
 	mux.HandleFunc("GET /api/rooms/{room_code}", getRecordingRoomInfo)
 	mux.HandleFunc("POST /api/rooms", createNewRecordingRoom)
 
-	err := http.ListenAndServe(":3333", mux)
+	err = http.ListenAndServe(":3333", mux)
 
 	if errors.Is(err, http.ErrServerClosed) {
 		fmt.Printf("server closed\n")
