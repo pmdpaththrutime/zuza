@@ -5,9 +5,12 @@ COPY go.mod ./
 RUN go mod download
 COPY . .
 
-RUN CGO_ENABLED=0 go build -o /server
+# CGO required to compile SQLite dependency
+RUN CGO_ENABLED=1 go build -o /server
 
 FROM alpine:3.23.5
+RUN apk add --no-cache sqlite-libs
+WORKDIR /app
 COPY --from=builder /server /server
 
 EXPOSE 3333
