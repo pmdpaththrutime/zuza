@@ -12,7 +12,7 @@ services:
   api:
     build: ./server
     volumes:
-      - ./server/zuza.db:/app/zuza.db
+      - data:/data
     ports:
       - "${API_PORT}:3333"
     healthcheck:
@@ -20,3 +20,6 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+
+volumes:
+  data:
