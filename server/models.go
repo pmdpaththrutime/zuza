@@ -12,20 +12,20 @@ type RecordingRoom struct {
 	ID         uuid.UUID
 	RoomCode   string
 	Owner      User
-	Performers []*User // the users authorized to access this room
+	Performers []User // the users authorized to access this room
 }
 
 type Recording struct {
 	ID         uuid.UUID
 	Room       RecordingRoom
-	Performers []*User
-	Tracks     []*Track
+	Performers []User
+	Tracks     []Track
 }
 
 type Track struct {
 	ID        uuid.UUID
 	Performer User
-	File      []*AudioFile // one or more (but usually one) files that represent this track
+	File      []AudioFile // one or more (but usually one) files that represent this track
 }
 
 type AudioFile struct {
